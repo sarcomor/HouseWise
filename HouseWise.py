@@ -24,7 +24,7 @@ class Read:
 read_file = Read()
 
 
-def list_home(a):
+def list_items(a):
     items = read_file.read()
     for i in items:
         print(i)
@@ -69,7 +69,7 @@ subparsers = global_parser.add_subparsers(
 
 list_parser = subparsers.add_parser("list", help="add two numbers a and b")
 list_parser.add_argument(type=int, nargs='?', dest="operands")
-list_parser.set_defaults(func=list_home)
+list_parser.set_defaults(func=list_items)
 
 add_parser = subparsers.add_parser("add", help="subtract two numbers a and b")
 add_parser.add_argument(type=int, nargs=2, dest='operands')
@@ -82,7 +82,7 @@ delete_parser.set_defaults(func=delete)
 
 list_parser.add_argument('--sort')
 args = global_parser.parse_args()
-if args.func == list_home:
+if args.func == list_items:
     if args.sort == 'size':
         sort_size()
     elif args.sort == 'price':
