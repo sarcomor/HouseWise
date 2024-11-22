@@ -3,94 +3,105 @@ import csv
 import os
 
 
-class Read:
-    tag_number = 0
-
-    def read(self):
-
-        path = 'D:/project/data.csv'
-        if not os.path.exists(path):
-            with open('data.csv', 'a', newline='')as file:
-                writer = csv.writer(file)
-
-        with open('data.csv', 'r')as file:
-            reader = csv.reader(file)
-            list1 = (
-                list(map(lambda item: (int(item[0]), int(item[1]), int(item[2])), reader)))
-            Read.tag_number = ((list1[-1])[0] if len(list1) > 0 else 0)
-            return list1
-
-
-read_file = Read()
-
-
-def list_items(a):
-    items = read_file.read()
-    for i in items:
-        print(i)
-
-
-def sort_price():
-    items = read_file.read()
-    items = list(sorted(items, key=lambda x: x[2]))
-    for i in items:
-        print(i)
-
-
-def sort_size():
-    items = read_file.read()
-    items = list(sorted(items, key=lambda x: x[1]))
-    for i in items:
-        print(i)
-
-
-def add(a, b):
-    items = read_file.read()
-    tag = read_file.tag_number
-    tag += 1
-    with open('data.csv', 'a', newline='')as file:
+def create_file():
+    with open('data.csv', 'w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow([tag, a, b])
-        items.append([tag, a, b])
+        writer.writerow(['price', 'size', 'tag'])
 
 
-def delete(a):
-    items = read_file.read()
-    items = list(filter(lambda item: item[0] != a, items))
-    with open('data.csv', 'w', newline='')as file:
+if not os.path.exists((os.curdir)+'\data.csv'):
+    create_file()
+
+
+def tag_number():
+    values = []
+    with open('data.csv', 'r') as file:
+        dict_reader_values = list(csv.DictReader(file))
+        for i in dict_reader_values:
+            values.append((i['size'], i['price'], i['tag']))
+            number = i['tag']
+    if len(values) < 1:
+        number = 0
+    return int(number)
+
+
+def add_(price, size):
+    number = tag_number()
+    with open('data.csv', 'a', newline='') as file:
         writer = csv.writer(file)
-        for i in items:
-            writer.writerow([i[0], i[1], i[2]])
+        writer.writerow([price, size, number+1])
 
 
-global_parser = argparse.ArgumentParser(prog="calc")
-subparsers = global_parser.add_subparsers(
-    title="subcommands", help="arithmetic operations")
+def delete_(tag_number):
+    values = []
+    with open('data.csv', 'r') as file:
+        dict_reader_values = list(csv.DictReader(file))
+        for i in dict_reader_values:
+            if i['tag'] != str(tag_number):
+                values.append((i['size'], i['price'], i['tag']))
+    create_file()
+    with open('data.csv', 'a', newline='') as file:
+        writer = csv.writer(file)
+        for i in values:
+            writer.writerow([i[1], i[0], i[2]])
 
-list_parser = subparsers.add_parser("list", help="add two numbers a and b")
-list_parser.add_argument(type=int, nargs='?', dest="operands")
-list_parser.set_defaults(func=list_items)
 
-add_parser = subparsers.add_parser("add", help="subtract two numbers a and b")
-add_parser.add_argument(type=int, nargs=2, dest='operands')
-add_parser.set_defaults(func=add)
+def list_():
+    with open('data.csv', 'r') as file:
+        dict_reader_values = list(csv.DictReader(file))
+    for i in dict_reader_values:
+        print(int(i['tag']), '- xxxxx')
+        print('price', (int(i['price'])), '$')
+        print('size', (int(i['size'])), 'm2\n---')
 
-delete_parser = subparsers.add_parser(
-    "delete", help="subtract two numbers a and b")
-delete_parser.add_argument(type=int, nargs=1, dest='operands')
-delete_parser.set_defaults(func=delete)
 
-list_parser.add_argument('--sort')
-args = global_parser.parse_args()
-if args.func == list_items:
-    if args.sort == 'size':
-        sort_size()
-    elif args.sort == 'price':
-        sort_price()
-    else:
-        args.func(args.operands)
-if args.func == add:
-    args.func(*args.operands)
-if args.func == delete:
-    args.func(*args.operands)
-#
+def sort_list_(sort_list):
+    values = []
+    match sort_list:
+        case 'size':
+            with open('data.csv', 'r') as file:
+                dict_reader_values = list(csv.DictReader(file))
+                for i in dict_reader_values:
+                    values.append(
+                        (int(i['size']), int(i['price']), int(i['tag'])))
+                values = sorted(values)
+                for i in values:
+                    print(int(i[2]), '- xxxxx')
+                    print('price', (int(i[1])), '$')
+                    print('size', (int(i[0])), 'm2\n---')
+        case 'price':
+            with open('data.csv', 'r') as file:
+                dict_reader_values = list(csv.DictReader(file))
+                for i in dict_reader_values:
+                    values.append(
+                        (int(i['price']), int(i['size']), int(i['tag'])))
+                values = sorted(values)
+                for i in values:
+                    print(int(i[2]), '- xxxxx')
+                    print('price', (int(i[0])), '$')
+                    print('size', (int(i[1])), 'm2\n---')
+
+
+def main():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("pos", choices=['list', 'delete', 'add'])
+    parser.add_argument("add_values", nargs="*", type=int)
+    parser.add_argument("-s", '--sort', choices=['price', 'size'])
+    args = parser.parse_args()
+
+    if args.pos == 'add':
+        add_(price=args.add_values[0], size=args.add_values[1])
+
+    if args.pos == 'delete':
+        delete_(args.add_values[0])
+
+    if args.pos == 'list':
+        if args.sort == 'price' or args.sort == 'size':
+            sort_list_(sort_list=args.sort)
+        else:
+            list_()
+
+
+if __name__ == '__main__':
+    main()
